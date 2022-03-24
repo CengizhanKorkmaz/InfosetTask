@@ -1,0 +1,103 @@
+﻿@using InfosetTask.Models;
+@using Microsoft.EntityFrameworkCore.Metadata.Internal
+@model List<Restaurant>
+@{
+    Layout = null;
+}
+<!DOCTYPE html>
+<head>
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap@4.4.1/dist/css/bootstrap.min.css" integrity="sha384-Vkoo8x4CGsO3+Hhxv8T/Q5PaXtkKtu6ug5TOeNV6gBiFeWPGFN9MuhOf23Q9Ifjh" crossorigin="anonymous">
+    <script src="https://ajax.googleapis.com/ajax/libs/jquery/3.6.0/jquery.min.js"></script>
+</head>
+<br />
+
+<table class="table  table-bordered">
+    <tr>
+        <th>Id</th>
+        <th>Restaurant</th>
+        <th>Latitude</th>
+        <th>Longitude</th>
+        <th>Km</th>
+  
+    </tr>
+    @foreach (var item in Model)
+    {
+        <tr>
+            <td>@item.id</td>
+            <td>@item.name</td>
+            <td>@item.latitude</td>
+            <td>@item.longitude</td>
+            <td>@item.distance</td>
+           
+            
+        </tr>
+    }
+</table>
+
+<br />
+@using (Html.BeginForm("Index", "Restaurant", FormMethod.Post))
+{
+    <input id="latitude" name="latitude" required="" type="hidden" />
+    <input id="longitude" name="longitude" required="" type="hidden" />
+    <button type="submit"class="btn btn-dark">En Yakın Şubeleri Listele</button>
+}
+<script>
+    function geoLocation() {
+        if (navigator.geolocation) {
+            navigator.geolocation.getCurrentPosition(function (position) {
+
+                $.ajax({
+                    type: 'GET',
+                    url: 'https://maps.googleapis.com/maps/api/geocode/json?latlng=' + position.coords.latitude + ',' + position.coords.longitude + '&key=AIzaSyAERxhL5DAHslqlOMv7VKd0apqAmT1sKv0',
+                    success: function(data) {
+                        address = data.results[0];;
+                        $("#latitude").val(address.geometry.location.lat);
+                        $("#longitude").val(address.geometry.location.lng);
+                        console.log(address.geometry.location.lat, address.geometry.location.lng);
+                    }
+                });
+
+            });
+        }
+    }
+    geoLocation();
+    // calculate distance
+    function calculateDistance() {
+        var origin = $("#origin").val();
+        var service = new google.maps.DistanceMatrixService();
+        service.getDistanceMatrix({
+            origins: [origin],
+            destinations: [destination],
+            travelMode: google.maps.TravelMode.DRIVING,
+            unitSystem: google.maps.UnitSystem.IMPERIAL, // miles and feet.
+            // unitSystem: google.maps.UnitSystem.metric, // kilometers and meters.
+            avoidHighways: false,
+            avoidTolls: false
+        },
+            callback
+        );
+    }
+
+
+    // get distance results
+    function callback(response, status) {
+        if (status != google.maps.DistanceMatrixStatus.OK) {
+            $("#result").html(err);
+        } else {
+            var origin = response.originAddresses[0];
+
+                console.log(response);
+                var distance = response.rows[0].elements[0].distance;
+                var duration = response.rows[0].elements[0].duration;
+
+                console.log(distance, duration);
+                distance_in_kilo = distance.value / 1000; // the kilom
+                km = distance_in_kilo.toFixed(2);
+
+        }
+    }
+
+
+
+
+</script>
